@@ -5,7 +5,7 @@ The BE part of "Pizza Delivary" appplication
 ## Installation
 
 ```bash
-$ npm install
+$ npm i (or npm install)
 ```
 
 ## Running the app
