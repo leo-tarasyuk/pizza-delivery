@@ -1,0 +1,90 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    hostname: rabbitmq
+    # depends_on:
+      # postgres:
+      #   condition: service_healthy
+      # mongo:
+      #   condition: service_healthy
+    env_file:
+      - .development.env
+    volumes:
+      - /var/lib/rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+  
+  # mongo:
+  #   container_name: mongodb
+  #   image: mongo:latest
+  #   restart: always
+  #   ports:
+  #     - '27017:27017'
+  #   volumes:
+  #     - dbmongo:/var/lib/mongo
+  #   healthcheck:
+  #     test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
+  #     timeout: 20s
+  #     retries: 10
+  #   networks:
+  #     - node-network
+    
+  # postgres:
+  #   container_name: postgresdb
+  #   image: postgres:12
+  #   restart: always
+  #   ports:
+  #     - 5432:5432
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   env_file:
+  #     - .development.env
+  #   environment:
+  #     PG_DATA: /var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready"]
+  #     timeout: 20s
+  #     retries: 10
+  #   networks:
+  #     - node-network
+
+  api:
+    build:
+      context: ./
+      dockerfile: ./apps/api/Dockerfile
+      target: development
+    env_file:
+      - .development.env
+    depends_on:
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+    command: npm run dev api
+
+  auth:
+    build:
+      context: ./
+      dockerfile: ./apps/auth/Dockerfile
+      target: development
+    env_file:
+      - .development.env
+    depends_on:
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev auth
+
+# volumes:
+  # dbmongo:
+  # pgdata:
+networks:
+  node-network:
+    driver: bridge
